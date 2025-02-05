@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .map-container {
+        width: 980px;
+        height: 630px;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .path-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .girl {
+        position: absolute;
+        width: 21px;
+        height: 69px;
+        background: url("./assets/girl.png");
+        transition: all 1s ease;
+        z-index: 2;
+      }
+
+      .controls {
+        position: absolute;
+        left: 7px;
+        top: 550px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 2;
+      }
+
+      .players-wrapper {
+        position: relative;
+        width: 536px;
+        height: 63px;
+        overflow: hidden;
+        background: url("./assets/friends_user.png") no-repeat center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .players-container {
+        width: 472px;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .players-slider {
+        display: flex;
+        align-items: center;
+        width: 470px;
+        height: 63px;
+        gap: 10px;
+        transition: transform 0.5s ease;
+        overflow: hidden;
+        width: max-content;
+        position: absolute;
+        left: 0;
+      }
+
+      .player-box {
+        position: relative;
+        width: 50px;
+        height: 51px;
+        background: url("./assets/background_user.png") no-repeat center;
+        transition: transform 0.5s ease-in-out;
+        flex-shrink: 0;
+      }
+
+      .player-box .full {
+        width: 50px;
+        height: 51px;
+        background: url("./assets/full_avatar_user.png") no-repeat center;
+      }
+
+      .player-box .badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 34px;
+        height: 35px;
+        background: url("./assets/plus_user.png") no-repeat center;
+      }
+
+      .university-btn {
+        width: 202px;
+        height: 63px;
+        cursor: pointer;
+        border: none;
+        background: url("./assets/univer_button.png") no-repeat center;
+      }
+      .chat-btn {
+        width: 65px;
+        height: 60px;
+        cursor: pointer;
+        border: none;
+        background: url("./assets/chat.png") no-repeat center;
+      }
+
+      .chat-btn:hover {
+        background: url("./assets/chat_hover.png") no-repeat center;
+      }
+
+      .mail-btn {
+        width: 65px;
+        height: 60px;
+        cursor: pointer;
+        border: none;
+        background: url("./assets/mail_button.png") no-repeat center;
+      }
+
+      .modal-overlay.active {
+        z-index: 5;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 980px;
+        height: 630px;
+        opacity: 0.52;
+        background-color: #7a7a7a;
+      }
+
+      .rating-btn {
+        width: 65px;
+        height: 60px;
+        cursor: pointer;
+        border: none;
+        background: url("./assets/rating_button.png") no-repeat center;
+      }
+
+      .rating-window {
+        position: fixed;
+        top: -100%;
+        left: 512px;
+        transform: translateX(-50%);
+        width: 523px;
+        height: 468px;
+        background: url("./assets/rating_modal.png") no-repeat center;
+        transition: top 0.5s ease;
+        z-index: 5;
+      }
+
+      .rating-window.active {
+        top: 75px;
+      }
+
+      .rating-content {
+        position: absolute;
+        width: 403px;
+        height: 223px;
+        overflow-y: auto;
+        top: 169px;
+        left: 60px;
+      }
+
+      .rating-body {
+        display: grid;
+        grid-gap: 6px;
+      }
+
+      .user-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 27px;
+        gap: 6px;
+        background: url("./assets/rating_modal_item.png") no-repeat left;
+      }
+
+      .friend-row::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #5724ff52;
+      }
+
+      .index-div {
+        width: 60px;
+        text-align: center;
+        margin-right: 35px;
+      }
+
+      .name-div {
+        width: 214px;
+      }
+
+      .points-div {
+        margin-left: 10px;
+        width: 28px;
+        text-align: center;
+      }
+
+      .slider-arrow {
+        cursor: pointer;
+        height: 27px;
+        width: 14px;
+        border: none;
+        background: url("./assets/arrow_user.png") no-repeat center;
+        margin: auto;
+      }
+
+      .slider-arrow.left {
+        transform: rotate(-180deg);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #00819c;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #45a9c1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="map-container">
+      <img
+        src="./assets/map.png"
+        class="map-background"
+        style="width: 100%; height: 100%" />
+      <img
+        src="./assets/path.png"
+        class="path-overlay"
+        style="width: 100%; height: 100%" />
+
+      <div class="girl" style="left: 434px; top: 438px"></div>
+
+      <div class="controls">
+        <div class="players-wrapper">
+          <button class="slider-arrow left"></button>
+          <div class="players-container">
+            <div class="players-slider"></div>
+          </div>
+          <button class="slider-arrow right"></button>
+        </div>
+        <button class="chat-btn"></button>
+        <button class="university-btn"></button>
+        <button class="mail-btn"></button>
+        <button class="rating-btn"></button>
+      </div>
+
+      <div class="modal-overlay"></div>
+      <div class="rating-window">
+        <div class="rating-content">
+          <div id="rating-body"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const data = {
+        rating: [
+          {
+            id: "123",
+            name: "Владимир",
+            lastName: "Ларионов",
+            img: "./male.png",
+            points: "463",
+          },
+          {
+            id: "9",
+            name: "Владимир",
+            lastName: "Сергеев",
+            img: "./male.png",
+            points: "521",
+          },
+          {
+            id: "231",
+            name: "Вениамин",
+            lastName: "Васильев",
+            img: "./male.png",
+            points: "865",
+          },
+          {
+            id: "321",
+            name: "Мария",
+            lastName: "Логинова",
+            img: "./female.png",
+            points: "865",
+          },
+          {
+            id: "492",
+            name: "Борис",
+            lastName: "Казанцев",
+            img: "./male.png",
+            points: "784",
+          },
+          {
+            id: "452",
+            name: "Полина",
+            lastName: "Калинина",
+            img: "./female.png",
+            points: "225",
+          },
+          {
+            id: "796",
+            name: "Даниил",
+            lastName: "Воробьёв",
+            img: "./male.png",
+            points: "642",
+          },
+          {
+            id: "4",
+            name: "Эрик",
+            lastName: "Аксёнов",
+            img: "./male.png",
+            points: "150",
+          },
+          {
+            id: "1155",
+            name: "Иван",
+            lastName: "Иванов",
+            img: "./male.png",
+            points: "100",
+          },
+          {
+            id: "12145",
+            name: "Артем",
+            lastName: "Алексеев",
+            img: "./male.png",
+            points: "1000",
+          },
+        ],
+        friends: [
+          {
+            id: "9",
+            name: "Владимир",
+            lastName: "Сергеев",
+            img: "./male.png",
+          },
+          {
+            id: "4",
+            name: "Эрик",
+            lastName: "Аксёнов",
+            img: "./male.png",
+          },
+          {
+            id: "15411",
+            name: "Ирина",
+            lastName: "Чеснокова",
+            img: "./female.png",
+          },
+          {
+            id: "15564",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+          {
+            id: "15565",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+          {
+            id: "15566",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+          {
+            id: "15567",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+          {
+            id: "15568",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+          {
+            id: "15569",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+          {
+            id: "15570",
+            name: "Дарина",
+            lastName: "Боброва",
+            img: "./female.png",
+          },
+        ],
+        points: [
+          { x: 434, y: 438 },
+          { x: 343, y: 471 },
+          { x: 269, y: 513 },
+          { x: 185, y: 534 },
+          { x: 104, y: 507 },
+          { x: 107, y: 438 },
+          { x: 132, y: 384 },
+          { x: 210, y: 347 },
+          { x: 172, y: 279 },
+          { x: 132, y: 226 },
+          { x: 190, y: 189 },
+          { x: 249, y: 236 },
+          { x: 292, y: 201 },
+          { x: 321, y: 155 },
+          { x: 368, y: 102 },
+          { x: 411, y: 33 },
+          { x: 499, y: 74 },
+          { x: 455, y: 143 },
+          { x: 482, y: 216 },
+          { x: 448, y: 297 },
+          { x: 376, y: 347 },
+          { x: 371, y: 408 },
+          { x: 448, y: 423 },
+          { x: 514, y: 468 },
+          { x: 613, y: 490 },
+          { x: 709, y: 517 },
+          { x: 802, y: 468 },
+          { x: 875, y: 418 },
+          { x: 940, y: 379 },
+          { x: 949, y: 307 },
+          { x: 891, y: 287 },
+          { x: 834, y: 324 },
+          { x: 780, y: 357 },
+          { x: 709, y: 347 },
+          { x: 718, y: 290 },
+          { x: 787, y: 249 },
+          { x: 796, y: 181 },
+          { x: 744, y: 171 },
+          { x: 670, y: 211 },
+          { x: 616, y: 253 },
+          { x: 573, y: 301 },
+          { x: 510, y: 280 },
+          { x: 499, y: 226 },
+          { x: 536, y: 171 },
+          { x: 583, y: 133 },
+          { x: 608, y: 79 },
+          { x: 638, y: 23 },
+          { x: 686, y: 50 },
+          { x: 665, y: 133 },
+          { x: 744, y: 79 },
+          { x: 811, y: 133 },
+          { x: 859, y: 102 },
+          { x: 877, y: 170 },
+        ],
+      };
+
+      // Движение студентки
+      const { points } = data;
+      let currentPoint = 0;
+      const girl = document.querySelector(".girl");
+
+      document
+        .querySelector(".university-btn")
+        .addEventListener("click", () => {
+          if (currentPoint < points.length - 1) {
+            currentPoint++;
+            girl.style.left = points[currentPoint].x - 3 + "px";
+            girl.style.top = points[currentPoint].y - 65 + "px";
+          } else {
+            currentPoint = 0;
+            girl.style.left = "430px";
+            girl.style.top = "434px";
+          }
+        });
+
+      // Слайдер игроков
+      const slider = document.querySelector(".players-slider");
+      const leftArrow = document.querySelector(".slider-arrow.left");
+      const rightArrow = document.querySelector(".slider-arrow.right");
+
+      // Создание элементов player-box
+      Array(Math.max(8, data.friends.length))
+        .fill()
+        .forEach((_, index) => {
+          const playerBox = document.createElement("div");
+          playerBox.classList.add("player-box");
+          if (index < data.friends.length) {
+            const full = document.createElement("div");
+            full.classList.add("full");
+            if (index === 0) {
+              const badge = document.createElement("div");
+              badge.classList.add("badge");
+              playerBox.appendChild(badge);
+            }
+
+            playerBox.appendChild(full);
+          }
+          slider.appendChild(playerBox);
+        });
+      // Управление сдвигом слайдера
+      let position = 0;
+      const boxWidth = 60; // Ширина одного player-box + отступы
+      const maxPosition = Math.max(0, data.friends.length - 8);
+
+      leftArrow.addEventListener("click", () => {
+        if (position < maxPosition) {
+          position++;
+          slider.style.transform = `translateX(${-position * boxWidth}px)`;
+        }
+      });
+
+      rightArrow.addEventListener("click", () => {
+        if (position > 0) {
+          position--;
+          slider.style.transform = `translateX(${-position * boxWidth}px)`;
+        }
+      });
+
+      // Окно рейтинга
+      const ratingModalOverlay = document.querySelector(".modal-overlay");
+      const ratingWindow = document.querySelector(".rating-window");
+
+      document.querySelector(".rating-btn").addEventListener("click", () => {
+        ratingWindow.classList.add("active");
+        ratingModalOverlay.classList.add("active");
+      });
+
+      // Генерация таблицы
+      const ratingBody = document.getElementById("rating-body");
+      ratingBody.classList.add("rating-body");
+      data.rating.forEach(({ id, name, lastName, points }, idx) => {
+        const row = document.createElement("div");
+        row.classList.add("user-row");
+        const indexDiv = document.createElement("div");
+        indexDiv.classList.add("index-div");
+        indexDiv.textContent = idx + 1;
+        const nameDiv = document.createElement("div");
+        nameDiv.classList.add("name-div");
+        nameDiv.textContent = name + lastName;
+        const pointsDiv = document.createElement("div");
+        pointsDiv.classList.add("points-div");
+        pointsDiv.textContent = points;
+        row.appendChild(indexDiv);
+        row.appendChild(nameDiv);
+        row.appendChild(pointsDiv);
+        if (data.friends.some((friend) => friend.id === id)) {
+          row.classList.add("friend-row");
+        }
+        ratingBody.appendChild(row);
+      });
+
+      // Закрытие окна при клике вне его
+      document.addEventListener("click", (e) => {
+        if (ratingModalOverlay.contains(e.target)) {
+          ratingWindow.classList.remove("active");
+          ratingModalOverlay.classList.remove("active");
+        }
+      });
+    </script>
+  </body>
+</html>
